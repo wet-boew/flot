@@ -1,0 +1,191 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>WxT Flot Examples: Categories</title>
+	<link href="../examples.css" rel="stylesheet" type="text/css">
+	<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="../../excanvas.min.js"></script><![endif]-->
+	<script language="javascript" type="text/javascript" src="../../jquery.js"></script>
+	<script language="javascript" type="text/javascript" src="../../jquery.flot.js"></script>
+	<script language="javascript" type="text/javascript" src="../../jquery.flot.categories.js"></script>
+	<script language="javascript" type="text/javascript" src="../../parserTable.js"></script>
+	<script type="text/javascript">
+/*
+	$(function() {
+		var data = [ ["January", 10], ["February", 8], ["March", 4], ["April", 13], ["May", 17], ["June", 9] ];
+
+		$.plot("#placeholder", [ data ], {
+			series: {
+				bars: {
+					show: true,
+					barWidth: 0.6,
+					align: "center"
+				}
+			},
+			xaxis: {
+				mode: "categories",
+				tickLength: 0
+			}
+		});
+
+		// Add the Flot version string to the footer
+
+		$("#footer").prepend("Flot " + $.plot.version + " &ndash; ");
+	});
+*/
+	(function ($) {
+    $(document).ready(function() {
+
+function getCellValue(cellRawValue) {
+	//trim spaces in the string;
+	cellRawValue = cellRawValue.replace(/\s\s+/g, " ");
+	cellRawValue = cellRawValue.replace(/^\s+|\s+$/g, "");
+	// Return the result
+	var result = {
+	cellUnit: cellRawValue.match(/[^\+\-\.\, 0-9]+[^\-\+0-9]*/), // Type: Float - Hint: You can use the JS function "parseFloat(string)"
+	cellValue: parseFloat(cellRawValue.match(/[\+\-0-9]+[0-9,\. ]*/)) // Type: String
+	};
+	return result;
+}
+        var _pe = window.pe || {
+            fn : {}
+        },
+			colorsAccent = ["#8d201c", "#EE8310", "#2a7da6", "#5a306b", "#285228", "#154055", "#555555", "#f6d200", "#d73d38", "#418541", "#87aec9", "#23447e", "#999999"];
+
+        // For each table
+        $('table').each(function () {
+
+            var currentTable = this;
+
+            // Parser the complex table
+            _pe.fn.parsertable.parse($(currentTable));
+
+            // Retrieve the parsed data
+            var parsedData = $(currentTable).data().tblparser;
+			
+			var allSeries = [];
+			
+			// First rowgroup assume is a data row group. 
+			// For all row....
+			for (i=0;i<parsedData.lstrowgroup[0].row.length; i++) {
+				var dataSeries = [],
+					datacolgroupfound = 0;
+				
+				// For each cells
+				for(j=0; j<parsedData.lstrowgroup[0].row[i].cell.length; j++){
+					
+					if(datacolgroupfound > 1 && parsedData.lstrowgroup[0].row[i].cell[j].col.groupstruct.type !== 2){
+						break;
+					}
+					
+					if(parsedData.lstrowgroup[0].row[i].cell[j].col.groupstruct.type === 2){
+						dataSeries.push([$(parsedData.lstrowgroup[0].row[i].cell[j].col.header[0].elem).text(), getCellValue($(parsedData.lstrowgroup[0].row[i].cell[j].elem).text()).cellValue]);
+						
+						// dataSeries.push([datacolgroupfound, getCellValue($(parsedData.lstrowgroup[0].row[i].cell[j].elem).text()).cellValue]);
+						datacolgroupfound ++;
+					}
+				}
+				
+				
+				
+				allSeries.push({ data: dataSeries, label: $(parsedData.lstrowgroup[0].row[i].header[0].elem).text(), color: colorsAccent[i] });
+				
+			}
+			
+			$.plot("#placeholder", allSeries, {
+				series: {
+					bars: {
+						show: true,
+						barWidth: 0.6,
+						align: "center"
+					}
+				},
+				xaxis: {
+					mode: "categories",
+					tickLength: 0
+				}
+			});
+
+
+
+});
+});
+}(jQuery));
+	
+	</script>
+</head>
+<body>
+
+	<div id="header">
+		<h1>WxT Categories</h1>
+	</div>
+
+	<div id="content">
+
+	
+	<table class="wet-boew-charts wb-charts-line">
+		<caption>2009 Individual Sales by Category</caption>
+		<thead>
+			<tr>
+				<td></td>
+				<th>food</th>
+				<th>auto</th>
+				<th>household</th>
+				<th>furniture</th>
+				<th>kitchen</th>
+				<th>bath</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<th>Mary</th>
+				<td>300</td>
+				<td>160</td>
+				<td>40</td>
+				<td>120</td>
+				<td>100</td>
+				<td>70</td>
+			</tr>
+			<tr>
+				<th>Tom</th>
+				<td>3</td>
+				<td>40</td>
+				<td>30</td>
+				<td>45</td>
+				<td>35</td>
+				<td>49</td>
+			</tr>
+			<tr>
+				<th>Brad</th>
+				<td>10</td>
+				<td>180</td>
+				<td>10</td>
+				<td>85</td>
+				<td>70</td>
+				<td>79</td>
+			</tr>
+			<tr>
+				<th>Kate</th>
+				<td>40</td>
+				<td>80</td>
+				<td>90</td>
+				<td>25</td>
+				<td>15</td>
+				<td>119</td>
+			</tr>		
+		</tbody>
+	</table>
+	
+		<div class="demo-container">
+			<div id="placeholder" class="demo-placeholder"></div>
+		</div>
+
+	</div>
+
+</body>
+</html>
+
+
+
+
+
