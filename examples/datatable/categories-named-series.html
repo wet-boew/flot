@@ -52,6 +52,208 @@ function getCellValue(cellRawValue) {
         },
 			colorsAccent = ["#8d201c", "#EE8310", "#2a7da6", "#5a306b", "#285228", "#154055", "#555555", "#f6d200", "#d73d38", "#418541", "#87aec9", "#23447e", "#999999"];
 
+
+		function addTblHeaders(tblparser) {
+
+			// Set ID and Header for the table head
+			for (i = 0; i < tblparser.theadRowStack.length; i += 1) {
+				currRow = tblparser.theadRowStack[i];
+			
+				for (j = 0; j < currRow.cell.length; j += 1) {
+					currCell = currRow.cell[j];
+				
+					if ((currCell.type === 1 || currCell.type === 7) && (
+							!(j > 0 && currCell.uid === currRow.cell[j - 1].uid) &&
+							!(i > 0 && currCell.uid === tblparser.theadRowStack[i - 1].cell[j].uid)
+						) ) {
+					
+						if (!currCell.header) { // Imediate header
+							currCell.header = [];
+						}
+						if (!currCell.headers) { // all the headers
+							currCell.headers = [];
+						}
+						
+						if (!currCell.child) { // Imediate sub cell
+							currCell.child = [];
+						}
+						if (!currCell.childs) { // All the sub cell
+							currCell.childs = [];
+						}
+					
+						// Set the header of the current cell if required
+						if (i > 0) {
+							// All the header cells
+							$.each(tblparser.theadRowStack[i - 1].cell[j].header, function() {
+								currCell.headers.push(this);
+								this.childs.push(currCell);
+							});
+							// Imediate header cell
+							currCell.headers.push(tblparser.theadRowStack[i - 1].cell[j]);
+							currCell.header.push(tblparser.theadRowStack[i - 1].cell[j]);
+							tblparser.theadRowStack[i - 1].cell[j].child.push(currCell);
+						}
+					
+					
+						// Set the header on his descriptive cell if any 
+						if (currCell.descCell) {
+							currCell.descCell.header = currCell;
+							currCell.descCell.headers = currCell;
+						}
+					}
+				
+				}
+			
+			}
+			
+			// TODO: Use "concat" instead of "push"
+			
+			// return;
+			
+			// Set Id/headers for header cell and data cell in the table.
+					for (i = 0; i < tblparser.row.length; i += 1) {
+						currRow = tblparser.row[i];
+						var rowheadersgroup = [],
+							rowheaders = [],
+							currrowheader = [];
+							ongoingRowHeader = [];
+						
+						// Get or Generate a unique ID for each header in this row
+						if (currRow.headerset && !currRow.idsheaderset) { 
+							for (j = 0; j < currRow.headerset.length; j += 1) {
+								rowheadersgroup.push(currRow.headerset[j]);
+							}
+							currRow.idsheaderset = rowheadersgroup;
+						}
+						
+						if (currRow.header) { 
+							for (j = 0; j < currRow.header.length; j += 1) {
+								rowheaders.push(currRow.header[j]);
+							}
+						}
+						rowheaders = (currRow.idsheaderset ? currRow.idsheaderset + ' ' + rowheaders : rowheaders);
+						for (j = 0; j < currRow.cell.length; j += 1) {
+							
+							if ((j === 0) || (j > 0 && currRow.cell[j].uid !== currRow.cell[(j - 1)].uid)){
+								var currCell = currRow.cell[j],
+									coldataheader = [];
+								
+								if (!currCell.header) { // Imediate header
+									currCell.header = [];
+								}
+								if (!currCell.headers) { // all the headers
+									currCell.headers = [];
+								}
+								
+								
+								if (currCell.col && !currCell.col.dataheader) {
+									var currCol = currCell.col;
+									var colheaders = [],
+										colheadersgroup = [];
+									if (currCol.headerLevel) { 
+										for (m = 0; m < currCol.headerLevel.length; m += 1) {
+											colheadersgroup.push(currCol.headerLevel[m]);
+										}
+									}
+									if (currCol.header) { 
+										for (m = 0; m < currCol.header.length; m += 1) {
+											colheaders.push(currCol.header[m]);
+										}
+									}
+									
+									if(!currCol.dataheader) {
+										currCol.dataheader = [];
+									}
+
+									currCol.dataheader.push(colheadersgroup);
+									currCol.dataheader.push(colheaders);
+								}
+								
+								if (currCell.col && currCell.col.dataheader) {
+									coldataheader = currCell.col.dataheader;
+								}
+								
+								
+								
+								if (currCell.type === 1) {
+									
+									currCell.header.push(ongoingRowHeader); // clone of ????
+									
+									currCell.headers.push(coldataheader);
+									currCell.headers.push(currRow.idsheaderset);
+									currCell.headers.push(ongoingRowHeader); // clone of ????
+
+									ongoingRowHeader.push(currCell);
+								}
+								
+								
+								if (currCell.type === 2 || currCell.type === 3) {
+									
+									// Get Current Column Headers
+									currrowheader = rowheaders;
+									
+									if (currCell.addcolheaders) {
+										for (m = 0; m < currCell.addcolheaders.length; m += 1) {
+											coldataheader.push(currCell.addcolheaders[m]);
+										}
+									}
+									
+									if (currCell.addrowheaders) {
+										for (m = 0; m < currCell.addrowheaders.length; m += 1) {
+											currrowheader.push(currCell.addrowheaders[m]);
+										}
+									}
+									
+									
+									currCell.headers.push(coldataheader);
+									currCell.headers.push(currrowheader);
+
+									currCell.header = currCell.headers;
+									
+								}
+								
+								if (currCell.type === 4 || currCell.type === 5) {
+									var descHeaders = "";
+									
+									if (currCell.describe) {
+										for (m = 0; m < currCell.describe.length; m += 1) {
+											var currCellId = $(currCell.describe[m].elem).attr('id');
+											if (currCellId === undefined || currCellId === '' || resetIds) {
+												// currCellId = idPrefix + new Date().getTime() + currCell.uid; // Generate a new ID
+												currCellId = idPrefix + currCell.describe[m].uid; // Generate a new ID
+												$(currCell.describe[m].elem).attr('id', currCellId);
+											}
+											descHeaders = (descHeaders ? descHeaders + ' ' + currCellId : currCellId);
+											if (currCell.type === 5 && !$(currCell.describe[m].elem).attr('aria-describedby')) {
+												var currCellId = $(currCell.elem).attr('id');
+												if (currCellId === undefined || currCellId === '' || resetIds) {
+													// currCellId = idPrefix + new Date().getTime() + currCell.uid; // Generate a new ID
+													currCellId = idPrefix + currCell.uid; // Generate a new ID
+													$(currCell.elem).attr('id', currCellId);
+												}
+												$(currCell.describe[m].elem).attr('aria-describedby', currCellId);
+											}
+										}
+									}
+									if (currCell.type !== 4) {
+										$(currCell.elem).attr('headers', (coldataheader ? coldataheader : '') + (coldataheader && descHeaders ? ' ' : '') + (descHeaders || ''));
+										if ($(currCell.elem).attr('headers') === undefined || $(currCell.elem).attr('headers') === '') {
+											$(currCell.elem).removeAttr('headers');
+										}
+									} else if (!$(currCell.elem).attr('aria-describedby')) {
+										$(currCell.elem).attr('aria-describedby', descHeaders || '');
+										$(currCell.elem).attr('headers', coldataheader || '');
+										if ($(currCell.elem).attr('headers') === undefined || $(currCell.elem).attr('headers') === '') {
+											$(currCell.elem).removeAttr('headers');
+										}
+									}
+								}						
+							}
+						}
+					}
+
+		}
+
         // For each table
         $('table').each(function () {
 
@@ -62,6 +264,9 @@ function getCellValue(cellRawValue) {
 
             // Retrieve the parsed data
             var parsedData = $(currentTable).data().tblparser;
+			
+			// Fix the parsed data
+			addTblHeaders(parsedData);
 			
 			var allSeries = [];
 			
@@ -127,13 +332,17 @@ function getCellValue(cellRawValue) {
 		<caption>2009 Individual Sales by Category</caption>
 		<thead>
 			<tr>
-				<td></td>
+				<td rowspan="2"></td>
+				<th colspan="2">Essential</th>
+				<th colspan="3">Optional</th>
+				<th rowspan="2">bath</th>
+			</tr>
+			<tr>
 				<th>food</th>
 				<th>auto</th>
 				<th>household</th>
 				<th>furniture</th>
 				<th>kitchen</th>
-				<th>bath</th>
 			</tr>
 		</thead>
 		<tbody>
