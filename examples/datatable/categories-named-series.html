@@ -326,8 +326,20 @@ function getCellValue(cellRawValue) {
 			// console.log(TotalRowValue);
 			
 			
+			//
+			// Get the tick
+			//
+			// From an option that would choose the appropriate row.			
+			// UseHeadRow get a number that represent the row to use to draw the label
+			
+			var UseHeadRow = parsedData.theadRowStack.length - 1;
+			
+			
+			var calcTick = [];
+			
 			var cumulFlotValue = 0;
 			
+			headerlevel = 0;
 			// Set the associate tick value along with the headers
 			for (i = 0; i < parsedData.theadRowStack[0].elem.cells.length; i += 1) {
 				
@@ -345,8 +357,12 @@ function getCellValue(cellRawValue) {
 					cumulFlotValue += parsedDataCell.flotDelta;
 					
 					parsedDataCell.flotValue = cumulFlotValue;
+					console.log(parsedDataCell);
+					if (headerlevel === UseHeadRow || 
 					
-					
+						((parsedDataCell.rowpos - 1) < UseHeadRow && UseHeadRow <= ((parsedDataCell.rowpos - 1) + (parsedDataCell.height - 1)))){
+						calcTick.push([(parsedDataCell.flotValue - parsedDataCell.flotDelta), $(parsedDataCell.elem).text()]);
+					}
 					
 					// console.log(parsedDataCell);
 					
@@ -354,14 +370,22 @@ function getCellValue(cellRawValue) {
 						if (parsedDataCell.child.length === 0) {
 							return;
 						}
+						headerlevel += 1
 						var internalCumul = 0;
+						internalCumul = parsedDataCell.flotValue - parsedDataCell.flotDelta;
+						
 						var flotDelta = (parsedDataCell.flotDelta / parsedDataCell.child.length);
 						for (k = 0; k < parsedDataCell.child.length; k += 1) {
 							parsedDataCell.child[k].flotDelta = flotDelta;
 							internalCumul = internalCumul + flotDelta;
 							parsedDataCell.child[k].flotValue = internalCumul;
+							
+							if (headerlevel === UseHeadRow) {
+								calcTick.push([(parsedDataCell.child[k].flotValue - flotDelta), $(parsedDataCell.child[k].elem).text()]);
+							}
 							AddMultiplierFactor(parsedDataCell.child[k]);
 						}
+						headerlevel -= 1;
 					}
 					AddMultiplierFactor(parsedDataCell);
 				}
@@ -424,7 +448,7 @@ function getCellValue(cellRawValue) {
 			}
 			
 			// console.log(allSeries);
-			
+			console.log(calcTick);
 			$.plot("#placeholder" + tblSequenceID, allSeries, {
 				/*series: {
 					
@@ -438,6 +462,15 @@ function getCellValue(cellRawValue) {
 					mode: "categories",
 					tickLength: 0
 				}*/
+				/*
+				xaxis: {
+					ticks: [
+						[0, 'abc'], [2, "def" ], [4, "ghi" ],
+					]
+				}*/
+				xaxis: (calcTick.length > 0 ? {ticks: calcTick} : { })
+				
+				
 			});
 
 
