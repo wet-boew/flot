@@ -443,12 +443,27 @@ function getCellValue(cellRawValue) {
 				
 				
 				
-				allSeries.push({ data: dataSeries, label: $(parsedData.lstrowgroup[0].row[i].header[0].elem).text(), color: colorsAccent[i] });
 				
+				if( i === 1) {
+					allSeries.push({ data: dataSeries, label: $(parsedData.lstrowgroup[0].row[i].header[0].elem).text(), color: colorsAccent[i]/*,
+					bars: { show: true, barWidth: 0.6, align: "center" }*/ });
+						
+				} else if (i === 2){
+					allSeries.push({ data: dataSeries, label: $(parsedData.lstrowgroup[0].row[i].header[0].elem).text(), color: colorsAccent[i],
+					lines: { show: true },
+					points: { show: true } });
+				} else if (i === 3){
+					allSeries.push({ data: dataSeries, label: $(parsedData.lstrowgroup[0].row[i].header[0].elem).text(), color: colorsAccent[i],
+					lines: { show: true, fill: true } });
+					
+				} else {
+					allSeries.push({ data: dataSeries, label: $(parsedData.lstrowgroup[0].row[i].header[0].elem).text(), color: colorsAccent[i] });
+				}
 			}
 			
 			// console.log(allSeries);
 			console.log(calcTick);
+
 			$.plot("#placeholder" + tblSequenceID, allSeries, {
 				/*series: {
 					
@@ -472,7 +487,6 @@ function getCellValue(cellRawValue) {
 				
 				
 			});
-
 
 
 });
